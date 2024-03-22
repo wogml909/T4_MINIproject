@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인</title>
+</head>
+<style>
+        *{
+            padding: 0;
+            margin: 0;
+            border: none;
+        }
+        body{
+            width: 100%;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .container{
+            width: 1920px;
+            height: 1000px;
+            /* background: radial-gradient(#777, #ffffff); */
+        }
+        .login-wrapper{
+            position: absolute;
+            left: 50%;
+            top:50%;
+            transform: translate(-50%,-50%);
+            width: 400px;
+            height: 350px;
+            padding: 40px;
+            background-color: #333;
+            box-sizing: border-box;
+        }
+
+        .login-wrapper > h2{
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        #login-form > input{
+            width: 100%;
+            height: 48px;
+            padding: 0 10px;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            background-color: #F8F8F8;
+        }
+        #login-form > input::placeholder{
+            color: #D2D2D2;
+        }
+        #login-form > input[type="submit"]{
+            color: #fff;
+            font-size: 16px;
+            background-color: #000;
+            margin-top: 20px;
+        }
+        #login-form > input[type="checkbox"]{
+            display: none;
+        }
+        #login-form > label{
+            color: #999999;
+        }
+        #login-form input[type="checkbox"] + label{
+            cursor: pointer;
+            padding-left: 26px;
+            background-image: url("checkbox.png");
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+        #login-form input[type="checkbox"]:checked + label{
+            background-image: url("checkbox-active.png");
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+</style>
+<script>
+    // 주소가져오기(페이지추가)
+function getAddr(num){
+    var juso_keyword = $("#txt_juso_keyword").val();
+	
+    var pageSize = 10;
+    var totalPages = 0;
+    var curPage = num;
+    $("input[name='currentPage']").val(curPage); // 페이지 바꿔주기
+    
+    $.ajax({
+	url :"https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do"  // 인터넷망
+	,type:"post"
+	,data:$("#juso_frm").serialize()
+	,dataType:"jsonp"
+	,crossDomain:true
+	,success:function(jsonStr){
+            var errCode = jsonStr.results.common.errorCode;
+            var errDesc = jsonStr.results.common.errorMessage;
+            var totalCount = jsonStr.results.common.totalCount;
+            if(errCode != "0"){
+            	console.log(errCode+"="+errDesc);
+                alertWarning(errorTitle, errDesc, btnText);
+                //closepop();
+            }else{
+            	if(jsonStr != null){
+                    makeListJson(jsonStr);
+                    
+                    // 페이징처리
+                    if (totalCount != 0) {
+                    	totalPages = Math.ceil(totalCount / pageSize);
+                        // pageLink(현재페이지, 전체페이지, 호출할 함수이름)
+                        var htmlStr = pageLink(curPage, totalPages, "getAddr");
+                        // common.js - pageLink
+                        $("#div_paginate").html(htmlStr);
+                    }
+                    else{
+                    	//alert("검색되는 주소없음")
+                    }
+            	}
+            }
+	}
+	,error: function(xhr,status, error){
+		alertWarning(errorTitle, "주소 에러발생", btnText);
+	}
+    });
+    if (totalPages < endPage) {
+	    endPage = totalPages;
+	}
+	
+	var nextPage = endPage + 1;
+	//console.log(curPage,"curPage,",startPage,"startPage,",endPage,"endPage,",nextPage,"nextPage")
+	
+	//맨 첫 페이지
+	if (curPage > 1 && pageLimit < curPage) {
+	    pageUrl += "<a class='page first' href='javascript:" + funName + "(1);'><i class='fas fa-angle-double-left'></a>";
+	}
+	//이전 페이지
+	if (curPage > pageLimit) {
+	    pageUrl += " <a class='page prev' href='javascript:" + funName + "(" + (startPage == 1 ? 1 : startPage - 1) + ");'><i class='fas fa-angle-left'></a>";
+	}
+	//~pageLimit 맞게 페이지 수 보여줌
+	for (var i = startPage; i <= endPage; i++) {
+	    //현재페이지면 진하게 표시
+	    if (i == curPage) {
+	        pageUrl += " <a href='#'><strong>" + i + "</strong></a>"
+	    } else {
+	        pageUrl += " <a href='javascript:" + funName + "(" + i + ");'> " + i + " </a>";
+	    }
+	}
+	//다음 페이지
+	if (nextPage <= totalPages) {
+	    pageUrl += "<a class='page next' href='javascript:" + funName + "(" + (nextPage < totalPages ? nextPage : totalPages) + ");'><i class='fas fa-angle-right'></a>";
+	}
+	//맨 마지막 페이지
+	if (curPage < totalPages && nextPage < totalPages) {
+	    pageUrl += "<a class='page last' href='javascript:" + funName + "(" + totalPages + ");'><i class='fas fa-angle-double-right'></a>";
+	}
+	//console.log(pageUrl);
+	
+	return pageUrl;
+}
+
+</script>
+<body>
+    <div class="container">
+         <div class="login-wrapper">
+        <h2>My_Login</h2>
+            <form method="post" action="membership.html" id="login-form">
+                <input type="text" name="userName" placeholder="Email">
+                <input type="password" name="userPassword" placeholder="Password">
+                <label for="remember-check">
+                    <input type="checkbox" id="remember-check">아이디 저장하기
+                </label>
+                <input type="submit" value="Login">
+            </form>
+        </div>
+    </div>
+</body>
